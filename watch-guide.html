@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>名表研究浏览器 · watch-guide</title>
+<style>
+:root{--bg:#0f1115;--panel:#1a1d24;--panel2:#222631;--line:#2c313c;--txt:#e8eaed;--mut:#9aa3b2;--acc:#c9a24b;--acc2:#e6c97a;--ok:#5fbf7f}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+header{background:linear-gradient(135deg,#241c08,#1a1405);padding:26px 18px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:22px;color:var(--acc2)}header p{margin:6px 0 0;color:var(--mut);font-size:13px}
+nav{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{background:var(--panel2);color:var(--mut);border:1px solid var(--line);padding:7px 13px;border-radius:18px;cursor:pointer;font-size:13px}
+nav button.on{background:var(--acc);color:#1a1405;border-color:var(--acc);font-weight:600}
+main{max-width:900px;margin:0 auto;padding:18px}
+.view{display:none}.view.on{display:block}
+h2{font-size:18px;color:var(--acc2);border-left:3px solid var(--acc);padding-left:9px;margin:6px 0 16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.chip{background:var(--panel2);border:1px solid var(--line);color:var(--mut);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;user-select:none}
+.chip.on{background:var(--acc);color:#1a1405;border-color:var(--acc);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+label.lbl{font-size:13px;color:var(--mut);min-width:64px}
+.big{display:block;width:100%;background:var(--acc);color:#1a1405;border:0;padding:12px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
+.big:hover{filter:brightness(1.08)}
+.res{background:linear-gradient(135deg,#241c08,#1a1405);border:1px solid var(--acc);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.res .nm{font-size:17px;font-weight:700;color:var(--acc2)}
+.tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--acc2);padding:2px 9px;border-radius:12px;font-size:11px;margin:3px 4px 0 0}
+.meta{color:var(--mut);font-size:12.5px;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--acc2)}
+.kc{background:var(--panel2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.kc h3{margin:0 0 6px;font-size:14px;color:var(--acc2)}
+input,select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 10px;border-radius:8px;font-size:13px}
+footer{border-top:1px solid var(--line);padding:16px;color:var(--mut);font-size:12.5px;text-align:center}
+footer a{color:var(--acc2)}a{color:var(--acc2)}
+</style>
+</head>
+<body>
+<header>
+  <h1>⌚ 名表研究浏览器</h1>
+  <p>研究名表的品牌、机芯、风格与审美参数——预算 + 风格 + 场景帮你缩小选择圈。数据来自个人名表研究笔记。</p>
+</header>
+<nav id="nav">
+  <button data-v="wizard" class="on">🔍 选表向导</button>
+  <button data-v="brands">⌚ 品牌库</button>
+  <button data-v="move">⚙ 机芯课堂</button>
+  <button data-v="wish">💛 想表清单</button>
+  <button data-v="kb">💡 知识卡</button>
+</nav>
+<main>
+  <section id="wizard" class="view on"></section>
+  <section id="brands" class="view"></section>
+  <section id="move" class="view"></section>
+  <section id="wish" class="view"></section>
+  <section id="kb" class="view"></section>
+</main>
+<footer>
+  🔗 姊妹项目：
+  <a href="https://wonderfulclaire.github.io/perfume-selector/perfume-finder.html">香水选香</a> ·
+  <a href="https://wonderfulclaire.github.io/coffee-selector/coffee-finder.html">咖啡选饮</a> ·
+  <a href="https://wonderfulclaire.github.io/style-finder/style-finder.html">穿搭风格</a> ·
+  中枢 <a href="https://wonderfulclaire.github.io/claire-learning-hub/">claire-learning-hub</a>
+</footer>
+<script src="watch-data.js"></script>
+<script src="watch-engine.js"></script>
+<script>
+(function(){
+  "use strict";
+  var E = window.WatchEngine;
+  var st = { budget: "中端", style: "不限", scene: "不限" };
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+  document.getElementById("nav").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return; var v = b.dataset.v;
+    document.querySelectorAll("#nav button").forEach(function(x){x.classList.toggle("on", x===b);});
+    document.querySelectorAll(".view").forEach(function(x){x.classList.toggle("on", x.id===v);});
+    if(v==="wish") renderWish();
+  });
+
+  function renderWizard(){
+    var budgets = window.WATCH_BUDGET.map(function(b){return b[0];});
+    var styles = ["不限"].concat(window.WATCH_STYLES.map(function(s){return s.name;}));
+    var scenes = ["不限","正式","通勤","日常","旅行","休闲","运动感","社交","约会","收藏"];
+    var html = '<h2>🔍 选表向导</h2><div class="card">'
+      + '<div class="row"><label class="lbl">预算</label><select id="budget">'+budgets.map(function(b){return '<option'+(b==="中端"?" selected":"")+'>'+b+'</option>';}).join("")+'</select></div>'
+      + '<div class="row"><label class="lbl">风格</label><select id="style">'+styles.map(function(s){return '<option>'+s+'</option>';}).join("")+'</select></div>'
+      + '<div class="row"><label class="lbl">场景</label><select id="scene">'+scenes.map(function(s){return '<option'+(s==="不限"?" selected":"")+'>'+s+'</option>';}).join("")+'</select></div>'
+      + '<button class="big" id="go">筛选品牌 →</button></div><div id="wizRes"></div>';
+    document.getElementById("wizard").innerHTML = html;
+    document.getElementById("budget").addEventListener("change", function(e){st.budget=e.target.value;});
+    document.getElementById("style").addEventListener("change", function(e){st.style=e.target.value;});
+    document.getElementById("scene").addEventListener("change", function(e){st.scene=e.target.value;});
+    document.getElementById("go").addEventListener("click", function(){
+      var res = E.recommend(st);
+      var box = document.getElementById("wizRes");
+      if(!res.length){box.innerHTML='<div class="card">这个组合暂无品牌，放宽预算或风格 🙃</div>';return;}
+      box.innerHTML = res.map(function(b){
+        return '<div class="res"><div class="nm">'+esc(b.name)+'</div>'
+          + '<div class="meta">'+esc(b.tier)+' · 价位 '+esc(b.price)+' · 风格 '+b.style.join("/")+'</div>'
+          + '<div class="meta" style="margin-top:5px">'+esc(b.icon)+'</div>'
+          + '<button class="chip" style="margin-top:8px" onclick="window.__wish(\''+esc(b.name)+'\')">＋ 加入想表清单</button></div>';
+      }).join("");
+    });
+  }
+  window.__wish = function(name){document.querySelector('#nav button[data-v="wish"]').click();document.getElementById("wName").value=name;};
+
+  function renderBrands(){
+    document.getElementById("brands").innerHTML = '<h2>⌚ 品牌库</h2>' + window.WATCH_BRANDS.map(function(b){
+      return '<div class="card"><b>'+esc(b.name)+'</b> <span class="meta">'+esc(b.tier)+' · '+esc(b.price)+'</span>'
+        + '<div>'+b.style.map(function(s){return '<span class="tag">'+esc(s)+'</span>';}).join("")+'</div>'
+        + '<div class="meta" style="margin-top:6px">'+esc(b.icon)+'</div></div>';
+    }).join("");
+  }
+
+  function renderMove(){
+    document.getElementById("move").innerHTML = '<h2>⚙ 机芯课堂</h2>' + window.WATCH_MOVEMENTS.map(function(m){
+      return '<div class="kc"><b>'+esc(m.name)+'</b> — '+esc(m.note)+'</div>';
+    }).join("");
+  }
+
+  var wish = E.makeWishlist();
+  function renderWish(){
+    var s = wish.stats();
+    var html = '<h2>💛 想表清单</h2>'
+      + '<div class="card"><div class="row"><input id="wName" placeholder="品牌/系列，如 劳力士 Submariner" style="flex:1;min-width:180px">'
+      + '<select id="wStatus"><option>想了解</option><option>喜欢</option><option>无感</option></select></div>'
+      + '<button class="big" id="save">加入清单</button></div>'
+      + '<div class="card">共 <b style="color:var(--acc2)">'+s.total+'</b> 支。状态：'+(Object.keys(s.by).length?s.by&&Object.entries(s.by).map(function(t){return esc(t[0])+'×'+t[1];}).join("，"):"空")+'</div>'
+      + '<div id="wishList"></div>';
+    document.getElementById("wish").innerHTML = html;
+    function draw(){var l=wish.all();document.getElementById("wishList").innerHTML=l.length?l.map(function(e,i){return '<div class="card" style="padding:10px 14px"><b>'+esc(e.name)+'</b> <span class="meta">'+esc(e.status||"想了解")+' · '+new Date(e.ts).toLocaleDateString()+'</span><button class="chip" data-i="'+i+'" style="margin-top:6px">删除</button></div>';}).join(""):'<div class="card">清单为空，去选表向导加点喜欢的。</div>';
+      document.querySelectorAll("#wishList .chip").forEach(function(b){b.addEventListener("click",function(){wish.remove(+b.dataset.i);draw();});});}
+    draw();
+    document.getElementById("save").addEventListener("click", function(){
+      var n=document.getElementById("wName").value.trim(); if(!n){alert("先填品牌/系列");return;}
+      wish.add({name:n, status:document.getElementById("wStatus").value});
+      document.getElementById("wName").value="";renderWish();
+    });
+  }
+
+  function renderKB(){
+    var html = '<h2>💡 知识卡</h2>';
+    html += '<div class="kc"><h3>风格类型</h3>'+window.WATCH_STYLES.map(function(s){return '<div><b>'+esc(s.name)+'</b> — '+s.keys.join("、")+'（'+s.scene.join("/")+'）</div>';}).join("")+'</div>';
+    html += '<div class="kc"><h3>审美参数</h3><table><tr><th>参数</th><th>建议</th></tr>'+window.WATCH_AESTHETIC.map(function(r){return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';}).join("")+'</table></div>';
+    html += '<div class="kc"><h3>预算路线</h3><table><tr><th>档位</th><th>价格</th><th>代表</th></tr>'+window.WATCH_BUDGET.map(function(r){return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join("")+'</table></div>';
+    html += '<div class="kc"><h3>研究路线</h3><div>• 先看品牌谱系：顶级制表 / 传统名表 / 独立制表 / 时装表 / 智能表</div><div>• 再看审美参数：表径、厚度、表盘、表带、金属色</div><div>• 表既是工具也是风格表达，与穿搭配饰联动</div></div>';
+    document.getElementById("kb").innerHTML = html;
+  }
+
+  renderWizard(); renderBrands(); renderMove(); renderKB();
+})();
+</script>
+</body>
+</html>
